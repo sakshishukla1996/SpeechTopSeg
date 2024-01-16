@@ -1,0 +1,46 @@
+# @package _global_
+
+defaults:
+  - override /model: linear
+  - override /callbacks: modelcheckpoint
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["sbert", "simple_linear", "two_layers"]
+
+root_train_path: "/disk1/data/preproc_sbert/dw_2019/"
+root_val_path: "/disk1/data/preproc_sbert/validation_data/"
+
+trainer:
+  accelerator: auto
+  devices: 1
+  strategy: ddp
+  min_epochs: 5
+  max_epochs: 10
+  gradient_clip_val: 0.5
+
+callbacks:
+  dirpath: /disk1/projects/sonar_multilingual_segmentation/checkpoints/sbert/
+  filename: sbert_linear
+
+
+model:
+  optimizer:
+    lr: 0.002
+  net:
+    input_size: 384
+    num_classes: 2
+  compile: false
+
+data:
+  batch_size: 1
+
+logger:
+  wandb:
+    tags: ${tags}
+    group: "SBert"
+  aim:
+    experiment: SBert_linear
+
+name: SBert_linear
