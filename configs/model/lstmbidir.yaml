@@ -14,7 +14,7 @@ scheduler:
   patience: 10
 
 net:
-  _target_: src.models.components.simple_net.MyLSTM2
+  _target_: src.models.components.simple_net.MyLSTMBidir
   input_size: 1024
   num_classes: 2 # [0, 1]
 

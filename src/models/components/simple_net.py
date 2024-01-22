@@ -27,6 +27,7 @@ class SimpleDenseNet(nn.Module):
         )
 
     def forward(self, batch: torch.Tensor) -> torch.Tensor:
+        # breakpoint()
         s, b, e = batch.shape
         x = batch.view(b, s, e)
         out = self.model(x)
@@ -48,6 +49,9 @@ class MyLSTM1(nn.Module):
         # )
 
     def forward(self, x: torch.Tensor):
+        # breakpoint()
+        s, b, e = x.shape
+        x = x.view(b, s, e)
         l1, h1 = self.lstm1(x)
         z0 = self.act1(l1)
         out = self.linear(z0)
@@ -64,6 +68,8 @@ class MyLSTM2(nn.Module):
         self.act1 = nn.ReLU()
 
     def forward(self, x: torch.Tensor):
+        s, b, e = x.shape
+        x = x.view(b, s, e)
         l1, h1 = self.lstm1(x)
         z0 = self.act1(l1)
         l2, h2 = self.lstm2(z0)
@@ -80,6 +86,8 @@ class MyLSTMBidir(nn.Module):
         self.act1 = nn.ReLU()
 
     def forward(self, x: torch.Tensor):
+        s, b, e = x.shape
+        x = x.view(b, s, e)
         l1, h1 = self.lstm1(x)
         z0 = self.act1(l1)
         l2, h2 = self.lstm2(z0)
