@@ -127,15 +127,16 @@ class LitModule(LightningModule):
         target_boundaries = get_seg_boundaries(classifications=targets)
         val_pk, val_count_pk = pk(pred_boundaries, target_boundaries)
         val_windiff, val_count_windiff = win_diff(pred_boundaries, target_boundaries)
-        self.log("val/pk", val_pk, on_step=True, on_epoch=False, prog_bar=True)
-        self.log("val/windiff", val_windiff, on_step=True, on_epoch=False, prog_bar=True)
         self.prev_batch = {"batch": batch, "preds": pred_boundaries, "targets": target_boundaries}
-        print(f"Predictions: \n\t{self.prev_batch['targets']} \n\t{self.prev_batch['preds']}")
-        print("="*80)
+        if val_pk<0.2:
+            print(f"Predictions: \n\t{self.prev_batch['targets']} \n\t{self.prev_batch['preds']}")
+            print("="*80)
         # update and log metrics
         self.val_loss(loss)
         self.val_acc(preds, targets)
         f1_score =  multiclass_f1_score(preds, targets, num_classes=2, average="macro")
+        self.log("val/pk", val_pk, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/windiff", val_windiff, on_step=True, on_epoch=False, prog_bar=True)
         self.log("val/f1", f1_score, on_step=True, on_epoch=True, prog_bar=True)
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)

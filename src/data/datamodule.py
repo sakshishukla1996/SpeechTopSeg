@@ -7,6 +7,8 @@ from pathlib import Path
 import random
 import os
 
+from src.data.components.audiodataset import AudioDataset
+
 # from sonar.models.sonar_text import (
 #     load_sonar_text_encoder_model,
 #     load_sonar_tokenizer,
@@ -207,6 +209,60 @@ class CustomDataModule2(LightningDataModule):
 
         self.data_train: Optional[Dataset] = CustomDataset2(train_filelist, mode="random", nfiles=2)
         self.data_val: Optional[Dataset] = CustomDataset(val_filelist, mode="seq")
+        # print(f"Current number of files being processed: {2**self.current_epoch}")
+        # self.data_test: Optional[Dataset] = CustomDataset(val_filelist, stage="test")
+
+        self.batch_size_per_device = batch_size
+
+
+    # def prepare_data(self) -> None:
+    #     pass
+
+    def train_dataloader(self) -> DataLoader[Any]:
+        """Create and return the train dataloader.
+
+        :return: The train dataloader.
+        """
+        return DataLoader(
+            dataset=self.data_train,
+            batch_size=self.batch_size_per_device,
+            num_workers=0, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=True,
+        )
+
+    def val_dataloader(self) -> DataLoader[Any]:
+        """Create and return the validation dataloader.
+
+        :return: The validation dataloader.
+        """
+        return DataLoader(
+            dataset=self.data_val,
+            batch_size=self.batch_size_per_device,
+            num_workers=0, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=False,
+        )
+
+
+#===========================================================================================
+
+class CustomAudioModule(LightningDataModule):
+    def __init__(
+        self,
+        train_filelist: str,
+        val_filelist: str,
+        train_label: str,
+        val_label: str,
+        window_size: 10,
+        batch_size: int = 1,
+        num_workers: int = 0,
+        pin_memory: bool = False,
+    ) -> None:
+        super().__init__()
+
+        self.data_train: Optional[Dataset] = AudioDataset(filepath=train_filelist, jsonpath=train_label, window_size=window_size)
+        self.data_val: Optional[Dataset] = AudioDataset(filepath=val_filelist, jsonpath=val_label, window_size=window_size)
         # print(f"Current number of files being processed: {2**self.current_epoch}")
         # self.data_test: Optional[Dataset] = CustomDataset(val_filelist, stage="test")
 

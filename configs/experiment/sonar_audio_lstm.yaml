@@ -1,0 +1,46 @@
+# @package _global_
+
+defaults:
+  - override /data: audiodataset
+  - override /model: lstm1
+  - override /callbacks: richprogress
+  - override /trainer: gpu
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["experiement", "sonar", "bilstm", "de", "random", "audio"]
+root_train_path: "/data/tagesschau/more_data_preprocessed/10sec/"
+root_val_path: "/data/tagesschau/more_data_preprocessed/10sec_val/"
+
+trainer:
+  accelerator: auto
+  devices: 1
+  strategy: ddp
+  min_epochs: 5
+  max_epochs: 10
+  gradient_clip_val: 0.5
+  val_check_interval: 1.0
+  num_sanity_val_steps: 0
+  # reload_dataloaders_every_n_epochs: 1
+
+model:
+  optimizer:
+    lr: 0.002
+  net:
+    input_size: 1024
+    num_classes: 2
+  compile: false
+
+data:
+  batch_size: 1
+  num_workers: 0
+
+logger:
+  wandb:
+    tags: ${tags}
+    group: sonar
+  aim:
+    experiment: sonar_audio_lstm1_random
+
+name: sonar_audio_lstm1_random

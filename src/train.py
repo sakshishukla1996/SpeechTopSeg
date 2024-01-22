@@ -1,3 +1,4 @@
+import os
 from typing import Any, Dict, List, Optional, Tuple
 from pathlib import Path
 
@@ -14,6 +15,8 @@ from omegaconf import DictConfig
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
 from src.data.datamodule import CustomDataModule
+from lightning.pytorch.loggers import WandbLogger
+
 from src.utils import (
     RankedLogger,
     extras,
@@ -26,7 +29,6 @@ from src.utils import (
 )
 
 log = RankedLogger(__name__, rank_zero_only=True)
-
 
 @task_wrapper
 def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -44,11 +46,14 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         L.seed_everything(cfg.seed, workers=True)
 
     log.info(f"Instantiating datamodule <{cfg.data._target_}>")
+
     train_filelist = sorted(list(Path(cfg.root_train_path).glob("**/*.pt")))
     val_filelist = sorted(list(Path(cfg.root_val_path).glob("**/*.pt")))
     log.info(f"Train filelist: {len(train_filelist)}; Val filelist: {len(val_filelist)}")
-    # datamodule = CustomDataModule(train_filelist=train_filelist, val_filelist=val_filelist, batch_size=1)
-    datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data, train_filelist=train_filelist, val_filelist=val_filelist)
+
+    datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
+
+
     
     log.info(f"Instantiating model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model)
@@ -57,18 +62,20 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     callbacks: List[Callback] = instantiate_callbacks(cfg.get("callbacks"))
 
     log.info("Instantiating loggers...")
-    logger: List[Logger] = instantiate_loggers(cfg.get("logger"))
+    # logger: List[Logger] = instantiate_loggers(cfg.get("logger"))
+    logger = WandbLogger(name=cfg.name, project=os.environ['WANDB_PROJECT'], prefix="Sonar")
+
     modelsave = ModelCheckpoint(
         dirpath="/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar",
         filename=cfg.name,
-        monitor="val/f1",
+        monitor="val/pk",
         save_last=True,
         verbose=True,
-        mode="max"
+        mode="min"
         )
 
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
-    trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=[modelsave], logger=logger)
+    trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=[modelsave], logger=[logger])
 
     object_dict = {
         "cfg": cfg,
