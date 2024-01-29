@@ -25,7 +25,7 @@ class LitModule(LightningModule):
         self.net = net
 
         # loss function
-        self.criterion = torch.nn.CrossEntropyLoss()
+        self.criterion = torch.nn.CrossEntropyLoss(weight=torch.tensor([0.1, 0.9]))
 
         # metric objects for calculating and averaging accuracy across batches
         self.train_acc = Accuracy(task="multiclass", num_classes=2)
@@ -66,16 +66,23 @@ class LitModule(LightningModule):
         """
         x, y = batch   # (1,sent,embb), (sent)
         b,s,e = x.shape
-        x = x.view(-1,1,e)
+        # x = x.view(-1,1,e)
         # breakpoint()
         logits = self.forward(x)
-        logits=logits.squeeze(0)
         # breakpoint()
-        y=y.squeeze(0)
-        loss = self.criterion(logits, y)
-        preds = torch.argmax(logits, dim=1)
+        # logits=logits.squeeze(0)
+        # breakpoint()
+        # y=y.squeeze(0)
+        loss = self.criterion(logits.squeeze(0), y.squeeze(0))
+        # loss = torch.tensor([self.criterion(input=logits[i], target=y[i]) for i in range(logits.shape[0])], requires_grad=True).sum()
+        preds = logits.softmax(-1).argmax(-1).squeeze(0)
+        # breakpoint()
+        # preds = torch.argmax(logits, dim=1)
+        # if self.current_epoch>0:
+        # preds = logits.softmax(-1).argmax(-1)
+        # breakpoint()
         preds[-1]=1
-        return loss, preds, y
+        return loss, preds, y.squeeze(0)
 
     def training_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
@@ -92,7 +99,7 @@ class LitModule(LightningModule):
         # update and log metrics
         self.train_loss(loss)
         self.train_acc(preds, targets)
-        f1_score =  multiclass_f1_score(preds, targets, num_classes=2, average="macro")
+        f1_score = multiclass_f1_score(preds.view(-1), targets.view(-1), num_classes=2, average="micro")
         if f1_score>0.75:
             pred_boundaries = get_seg_boundaries(classifications=preds)
             target_boundaries = get_seg_boundaries(classifications=targets)
@@ -103,7 +110,7 @@ class LitModule(LightningModule):
         
 
         self.log("train/f1", f1_score, on_step=True, on_epoch=True, prog_bar=True)
-        self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/loss", self.train_loss, on_step=True, on_epoch=True, prog_bar=True)
         self.log("train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True)
 
         # return loss or backpropagation will fail
@@ -123,10 +130,17 @@ class LitModule(LightningModule):
         # print("INTO VAL_STEP!")
         # breakpoint()
         loss, preds, targets = self.model_step(batch)
-        pred_boundaries = get_seg_boundaries(classifications=preds)
-        target_boundaries = get_seg_boundaries(classifications=targets)
-        val_pk, val_count_pk = pk(pred_boundaries, target_boundaries)
-        val_windiff, val_count_windiff = win_diff(pred_boundaries, target_boundaries)
+        # breakpoint()
+        pred_boundaries = get_seg_boundaries(classifications=preds.squeeze(0))
+        target_boundaries = get_seg_boundaries(classifications=targets.squeeze(0))
+        try:
+            val_pk, val_count_pk = pk(pred_boundaries, target_boundaries)
+        except:
+            val_pk = 1.0
+        try:
+            val_windiff, val_count_windiff = win_diff(pred_boundaries, target_boundaries)
+        except:
+            val_windiff=1.0
         self.prev_batch = {"batch": batch, "preds": pred_boundaries, "targets": target_boundaries}
         if val_pk<0.2:
             print(f"Predictions: \n\t{self.prev_batch['targets']} \n\t{self.prev_batch['preds']}")
@@ -134,7 +148,7 @@ class LitModule(LightningModule):
         # update and log metrics
         self.val_loss(loss)
         self.val_acc(preds, targets)
-        f1_score =  multiclass_f1_score(preds, targets, num_classes=2, average="macro")
+        f1_score =  multiclass_f1_score(preds.view(-1), targets.view(-1), num_classes=2, average="micro")
         self.log("val/pk", val_pk, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/windiff", val_windiff, on_step=True, on_epoch=False, prog_bar=True)
         self.log("val/f1", f1_score, on_step=True, on_epoch=True, prog_bar=True)

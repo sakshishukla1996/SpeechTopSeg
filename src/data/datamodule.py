@@ -8,6 +8,7 @@ import random
 import os
 
 from src.data.components.audiodataset import AudioDataset
+from src.data.components.textdataset import TextDataset
 
 # from sonar.models.sonar_text import (
 #     load_sonar_text_encoder_model,
@@ -119,6 +120,7 @@ class CustomDataModule(LightningDataModule):
     #         pin_memory=self.hparams.pin_memory,
     #         shuffle=False,
     #     )
+
 #===========================================================================================
     
 class CustomDataset2(Dataset):
@@ -140,11 +142,11 @@ class CustomDataset2(Dataset):
         self.portu = list(Path("/data/preproc_sonar_single/pt").glob("*.pt"))
         print([i for i in self.portu if not os.path.exists(i)])
         print(f"Number of files are {len(self.portu)=}")
-        
+
         self.stage=mode
         self.nfiles=nfiles
         self.counts = 0
-    
+
     def __len__(self):
         return 10000
 
@@ -194,7 +196,34 @@ class CustomDataset2(Dataset):
         else:
             self.counts+=1
         return embs, labs
+    
+    # def collate_fn(self, batch):
+    #     # 1. Remove segments shorter than 4 sentences. 
 
+    #     # print("="*80)
+    #     # print(type(batch))
+    #     # print(len(batch))
+    #     # print(batch[0])
+    #     # print("="*80)
+    #     max_len = 0
+    #     out_x, out_y = [], []
+    #     for dp, dl in batch:
+    #         if len(dp)>4:
+    #             out_x.append(dp)
+    #             out_y.append(dl)
+    #             if len(dp)>max_len:
+    #                 max_len=len(dp)
+    #     out_pad_x, out_pad_y = [], []
+    #     for dp, dl in zip(out_x, out_y):
+    #         dpp = torch.nn.functional.pad(dp, (0, 0, 0, max_len - len(dp)))
+    #         dlp = torch.nn.functional.pad(dl, (max_len - len(dl), 0))
+    #         out_pad_x.append(dpp)
+    #         out_pad_y.append(dlp)
+    #     return torch.stack(out_pad_x), torch.stack(out_pad_y)
+
+    #     # 2. Pad the rest of the segments with max_sentence_segment
+        # 3. Torch.cat 
+ 
 class CustomDataModule2(LightningDataModule):
     def __init__(
         self,
@@ -229,6 +258,7 @@ class CustomDataModule2(LightningDataModule):
             num_workers=0, #self.hparams.num_workers,
             pin_memory=False,
             shuffle=True,
+            # collate_fn=self.data_train.collate_fn
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -242,9 +272,56 @@ class CustomDataModule2(LightningDataModule):
             num_workers=0, #self.hparams.num_workers,
             pin_memory=False,
             shuffle=False,
+            # collate_fn=self.data_train.collate_fn
         )
 
+class NewCustomDataModuleText(LightningDataModule):
+    def __init__(
+        self,
+        train_filelist: list,
+        val_filelist: list,
+        # test_filelist: str = "data/",
+        batch_size: int = 1,
+        num_workers: int = 0,
+        pin_memory: bool = False,
+    ) -> None:
+        super().__init__()
 
+        self.data_train: Optional[Dataset] = TextDataset(filepath=train_filelist, mode="random", nfiles=2, max_files=10000)
+        self.data_val: Optional[Dataset] = TextDataset(filepath=val_filelist, mode="seq", nfiles=1)
+        self.batch_size_per_device = batch_size
+
+
+    # def prepare_data(self) -> None:
+    #     pass
+
+    def train_dataloader(self) -> DataLoader[Any]:
+        """Create and return the train dataloader.
+
+        :return: The train dataloader.
+        """
+        return DataLoader(
+            dataset=self.data_train,
+            batch_size=self.batch_size_per_device,
+            num_workers=0, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=True,
+            # collate_fn=self.data_train.collate_fn
+        )
+
+    def val_dataloader(self) -> DataLoader[Any]:
+        """Create and return the validation dataloader.
+
+        :return: The validation dataloader.
+        """
+        return DataLoader(
+            dataset=self.data_val,
+            batch_size=self.batch_size_per_device,
+            num_workers=0, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=False,
+            # collate_fn=self.data_train.collate_fn
+        )
 #===========================================================================================
 
 class CustomAudioModule(LightningDataModule):
@@ -297,3 +374,6 @@ class CustomAudioModule(LightningDataModule):
             pin_memory=False,
             shuffle=False,
         )
+
+    def collate_fn(self, batch):
+        return batch

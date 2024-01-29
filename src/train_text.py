@@ -51,7 +51,7 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     val_filelist = sorted(list(Path(cfg.root_val_path).glob("**/*.pt")))
     log.info(f"Train filelist: {len(train_filelist)}; Val filelist: {len(val_filelist)}")
 
-    datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data, train_filelist=train_filelist, val_filelist=val_filelist)
+    datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
 
 
     
