@@ -1,0 +1,47 @@
+# @package _global_
+
+defaults:
+  - override /data: harcoded_loader
+  - override /model: linear
+  - override /callbacks: richprogress
+  - override /trainer: gpu
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+tags: ["experiement", "sonar", "linear", "en", "random"]
+root_train_path: "/data/preproc_sonar_single/fr/"
+root_val_path: "/data/preproc_sonar/validation_dataset/"
+
+trainer:
+  accelerator: auto
+  devices: 1
+  strategy: ddp
+  min_epochs: 5
+  max_epochs: 10
+  gradient_clip_val: 0.5
+  val_check_interval: 1.0
+  num_sanity_val_steps: 0
+  # reload_dataloaders_every_n_epochs: 1
+
+model:
+  optimizer:
+    lr: 0.002
+  net:
+    input_size: 1024
+    num_classes: 2
+  compile: false
+
+data:
+  batch_size: 1
+  num_workers: 0
+
+logger:
+  wandb:
+    tags: ${tags}
+    project: Sonar_text
+    group: sonar_text_dw
+  aim:
+    experiment: sonar_en_linear_random
+
+name: sonar_en_linear_random
