@@ -1,0 +1,5 @@
+_target_: src.data.datamodule.EuroNewsDataLoader
+train_list: 
+  - /data/euronews_dataset/processed_mono_embeddings/de/*.pt  # Glob path
+val_list: 
+  - /data/euronews_dataset/processed_mono_embeddings/de/*.pt

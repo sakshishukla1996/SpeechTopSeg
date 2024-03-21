@@ -1,0 +1,8 @@
+_target_: src.data.datamodule.CustomAudioModule2
+train_filelist: /data/tagesschau/more_data_preprocessed/10sec/*.pt
+val_filelist: /data/tagesschau/more_data_preprocessed/10sec/*.pt
+train_label: /data/tagesschau/more_data/labels.json
+val_label: /data/tagesschau/more_data/labels.json
+window_size: 10
+# test_filelist: str = "data/",
+batch_size: 16
