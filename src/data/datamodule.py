@@ -7,8 +7,8 @@ from pathlib import Path
 import random
 import os
 
-from src.data.components.audiodataset import AudioDataset
-from src.data.components.textdataset import TextDataset
+from src.data.components.audiodataset import AudioDataset, AudioDataset2, EuroNewsDataset, EuroNewsDatasetConcat
+from src.data.components.textdataset import TextDataset, EuroNewsTextDataset, EuroNewsConcatTextDataset
 
 # from sonar.models.sonar_text import (
 #     load_sonar_text_encoder_model,
@@ -287,7 +287,7 @@ class NewCustomDataModuleText(LightningDataModule):
     ) -> None:
         super().__init__()
 
-        self.data_train: Optional[Dataset] = TextDataset(filepath=train_filelist, mode="random", nfiles=2, max_files=10000)
+        self.data_train: Optional[Dataset] = TextDataset(filepath=train_filelist, mode="random", nfiles=2, max_files=20000)
         self.data_val: Optional[Dataset] = TextDataset(filepath=val_filelist, mode="seq", nfiles=1)
         self.batch_size_per_device = batch_size
 
@@ -375,5 +375,241 @@ class CustomAudioModule(LightningDataModule):
             shuffle=False,
         )
 
+    def collate_fn(self, batch):
+        return batch
+    
+class CustomAudioModule2(LightningDataModule):
+    def __init__(
+        self,
+        train_filelist: str,
+        val_filelist: str,
+        train_label: str,
+        val_label: str,
+        window_size: 10,
+        batch_size: int = 1,
+        num_workers: int = 0,
+        pin_memory: bool = False,
+    ):
+        super().__init__()
+        self.data_train: Optional[Dataset] = AudioDataset2(filepath=train_filelist, jsonpath=train_label, window_size=window_size)
+        self.data_val: Optional[Dataset] = AudioDataset2(filepath=val_filelist, jsonpath=val_label, window_size=window_size)
+        self.batch_size_per_device = batch_size
+
+    def train_dataloader(self) -> DataLoader[Any]:
+        """Create and return the train dataloader.
+
+        :return: The train dataloader.
+        """
+        return DataLoader(
+            dataset=self.data_train,
+            batch_size=self.batch_size_per_device,
+            num_workers=0, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=True,
+        )
+
+    def val_dataloader(self) -> DataLoader[Any]:
+        """Create and return the validation dataloader.
+
+        :return: The validation dataloader.
+        """
+        return DataLoader(
+            dataset=self.data_val,
+            batch_size=self.batch_size_per_device,
+            num_workers=0, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=False,
+        )
+
+    def collate_fn(self, batch):
+        return batch
+    
+class EuroNewsDataLoader(LightningDataModule):
+    def __init__(self, train_list, val_list, test_list) -> None:
+        super().__init__()
+        self.data_train: Optional[Dataset] = EuroNewsDataset(embeddings_path=train_list)
+        self.data_val: Optional[Dataset] = EuroNewsDataset(embeddings_path=val_list)
+        self.test_data: Optional[Dataset] = EuroNewsDataset(embeddings_path=test_list)
+        self.batch_size_per_device = 1
+
+    def train_dataloader(self) -> Any:
+        """Create and return the train dataloader.
+
+        :return: The train dataloader.
+        """
+        return DataLoader(
+            dataset=self.data_train,
+            batch_size=self.batch_size_per_device,
+            num_workers=2, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=True,
+        )
+    
+    def val_dataloader(self) -> Any:
+        """Create and return the validation dataloader.
+
+        :return: The validation dataloader.
+        """
+        return DataLoader(
+            dataset=self.data_val,
+            batch_size=self.batch_size_per_device,
+            num_workers=2, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=False,
+        )
+    
+    def test_dataloader(self) -> Any:
+        """Create and return the test dataloader.
+
+        :return: The test dataloader.
+        """
+        return DataLoader(
+            dataset=self.test_data,
+            batch_size=self.batch_size_per_device,
+            num_workers=2, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=False,
+        )
+    
+    def collate_fn(self, batch):
+        return batch
+    
+class EuroNewsConcatDataLoader(LightningDataModule):
+    def __init__(self, train_list, val_list, test_list) -> None:
+        super().__init__()
+        self.data_train: Optional[Dataset] = EuroNewsDatasetConcat(embeddings_path=train_list)
+        self.data_val: Optional[Dataset] = EuroNewsDatasetConcat(embeddings_path=val_list)
+        self.test_data: Optional[Dataset] = EuroNewsDatasetConcat(embeddings_path=test_list)
+        self.batch_size_per_device = 1
+
+    def train_dataloader(self) -> Any:
+        """Create and return the train dataloader.
+
+        :return: The train dataloader.
+        """
+        return DataLoader(
+            dataset=self.data_train,
+            batch_size=self.batch_size_per_device,
+            num_workers=0, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=True,
+        )
+    
+    def val_dataloader(self) -> Any:
+        """Create and return the validation dataloader.
+
+        :return: The validation dataloader.
+        """
+        return DataLoader(
+            dataset=self.data_val,
+            batch_size=self.batch_size_per_device,
+            num_workers=0, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=False,
+        )
+
+    def test_dataloader(self) -> Any:
+        return DataLoader(
+            dataset=self.test_data,
+            batch_size=self.batch_size_per_device,
+            shuffle=False,
+            pin_memory=False,
+        )
+    
+    def collate_fn(self, batch):
+        return batch
+
+class EuroNewsTextDataLoader(LightningDataModule):
+    def __init__(self, train_list, val_list, test_list) -> None:
+        super().__init__()
+        self.data_train: Optional[Dataset] = EuroNewsTextDataset(embeddings_path=train_list)
+        self.data_val: Optional[Dataset] = EuroNewsTextDataset(embeddings_path=val_list)
+        self.test_data: Optional[Dataset] = EuroNewsTextDataset(embeddings_path=test_list)
+        self.batch_size_per_device = 1
+
+    def train_dataloader(self) -> Any:
+        """Create and return the train dataloader.
+
+        :return: The train dataloader.
+        """
+        return DataLoader(
+            dataset=self.data_train,
+            batch_size=self.batch_size_per_device,
+            num_workers=2, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=True,
+        )
+    
+    def val_dataloader(self) -> Any:
+        """Create and return the validation dataloader.
+
+        :return: The validation dataloader.
+        """
+        return DataLoader(
+            dataset=self.data_val,
+            batch_size=self.batch_size_per_device,
+            num_workers=2, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=False,
+        )
+
+    def test_dataloader(self) -> Any:
+        return DataLoader(
+            dataset=self.test_data,
+            batch_size=self.batch_size_per_device,
+            shuffle=False,
+            pin_memory=False,
+        )
+    
+    def collate_fn(self, batch):
+        return batch
+
+class EuroNewsTextConcatDataLoader(LightningDataModule):
+    def __init__(self, train_list, val_list, test_list) -> None:
+        super().__init__()
+        self.data_train: Optional[Dataset] = EuroNewsConcatTextDataset(embeddings_path=train_list)
+        self.data_val: Optional[Dataset] = EuroNewsConcatTextDataset(embeddings_path=val_list)
+        self.test_data: Optional[Dataset] = EuroNewsConcatTextDataset(embeddings_path=test_list)
+        self.batch_size_per_device = 1
+
+    def train_dataloader(self) -> Any:
+        """Create and return the train dataloader.
+
+        :return: The train dataloader.
+        """
+        return DataLoader(
+            dataset=self.data_train,
+            batch_size=self.batch_size_per_device,
+            num_workers=2, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=True,
+        )
+    
+    def val_dataloader(self) -> Any:
+        """Create and return the validation dataloader.
+
+        :return: The validation dataloader.
+        """
+        return DataLoader(
+            dataset=self.data_val,
+            batch_size=self.batch_size_per_device,
+            num_workers=2, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=False,
+        )
+    
+    def test_dataloader(self) -> Any:
+        """Create and return the test dataloader.
+
+        :return: The test dataloader.
+        """
+        return DataLoader(
+            dataset=self.test_data,
+            batch_size=self.batch_size_per_device,
+            num_workers=2, #self.hparams.num_workers,
+            pin_memory=False,
+            shuffle=False,
+        )
+    
     def collate_fn(self, batch):
         return batch

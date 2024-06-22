@@ -13,13 +13,12 @@ import math
 from sonar.inference_pipelines.speech import SpeechToEmbeddingModelPipeline
 
 languages = {"es":"spa", "pt":"por", "en":"eng", "ru":"rus", "fr":"fra", "de":"deu", "it":"ita"}
-
-language = "de"
+lang = "en"
+language = "pt"
 input_root = f"/data/euronews_dataset/processed_mono/{language}"
-input_ext = "wav"
+input_ext = "webm"
 files = list(Path(input_root).glob(f"**/*.{input_ext}"))
 bs=16
-
 
 extract_wav = False
 extract_emb = True
@@ -46,12 +45,13 @@ if extract_wav:
         prog.set_postfix({"filename": os.path.join(output, filename.replace(input_ext, output_ext))})
 
 if extract_emb:
-    output_root = Path("/data/euronews_dataset/processed_mono_embeddings/")
+    output_root = Path("/data/euronews_dataset/processed_mono_eng_embeddings/")
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     print(f"Working with the model: sonar_speech_encoder_{languages[language]} for language {language}")
-    mapper = SpeechToEmbeddingModelPipeline(encoder=f"sonar_speech_encoder_{languages[language]}", device=device)
+    mapper = SpeechToEmbeddingModelPipeline(encoder=f"sonar_speech_encoder_{languages[lang]}", device=device)
     files = list(Path(input_root).glob("*.wav"))
     assert len(files)!=0, "Please make sure you are using the correct file folder containing wavs."
+    print(len(files))
     progress = tqdm(files)
     for file in progress:
         output = Path(os.path.join(output_root, file.parent.name))
@@ -70,6 +70,9 @@ if extract_emb:
 
 if get_stats:
     # files = list(Path(input_root).glob(f"**/*.{input_ext}"))
+    input_root = f"/data/euronews_dataset/processed_mono/{language}"
+    input_ext = "wav"
+    files = list(Path(input_root).glob(f"**/*.{input_ext}"))
     prog = tqdm(files)
     samples = {}
     for file in prog:
@@ -78,8 +81,8 @@ if get_stats:
             duration = meta.num_frames / meta.sample_rate
             language = file.parent.name
             if samples.get(language) == None:
-                samples[language] = []
-            samples[language].append(duration)
+                samples[file.stem] = []
+            samples[file.stem].append(duration)
         except:
             print("Filed on file: ", file)
 

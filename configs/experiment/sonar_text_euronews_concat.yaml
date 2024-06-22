@@ -1,7 +1,7 @@
 # @package _global_
 
 defaults:
-  - override /data: euronewsdataset
+  - override /data: euronewsconcattextdataset
   - override /model: linear
   - override /callbacks: richprogress
   - override /trainer: gpu
@@ -9,7 +9,7 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-tags: ["euronews", "sonar", "es", "audio"]
+tags: ["euronews", "sonar", "all_pt", "text", "multi_lingual"]
 root_train_path: None
 root_val_path: None
 
@@ -29,7 +29,7 @@ model:
   optimizer:
     lr: 0.002
   net:
-    input_size: 1024
+    input_size: 3072
     num_classes: 2
   compile: false
 
@@ -37,9 +37,9 @@ model:
 logger:
   wandb:
     tags: ${tags}
-    group: Spanish_vanilla
+    group: multilingual_text
   # aim:
   #   experiment: euronews_vanilla_french
 
 name: sonar_audio_linear_random # ModelName_numLayers
-checkpoint_path: /data/euronews_dataset/weights
+checkpoint_path: /data/euronews_dataset/weights/

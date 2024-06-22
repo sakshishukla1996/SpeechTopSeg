@@ -40,32 +40,27 @@ class SimpleDenseNet(nn.Module):
 
 
 class MyLSTM1(nn.Module):
-    def __init__(self, input_size: int = 1024, num_classes: int=2, dropout: float = 0.2, num_layers: int = 1) -> None:
+    def __init__(self, input_size: int = 1024, num_classes: int=2, dropout: float = 0.2, num_layers: int = 4) -> None:
         super().__init__()
-        self.lstm1 = nn.LSTM(input_size, 512, dropout=dropout)
+        self.lstm1 = nn.LSTM(input_size, 512, dropout=dropout, num_layers=num_layers)
         self.linear = nn.Linear(512, num_classes)
         self.act1 = nn.ReLU()
 
-        # self.model = nn.Sequential(
-        #     nn.LSTM(input_size, 512),
-        #     nn.ReLU(),
-        #     nn.Linear(512, num_classes),
-        #     nn.ReLU(),
-        #     nn.Linear(512, num_classes)
-        # )
-
     def forward(self, x: torch.Tensor):
-        s, b, e = x.shape
-        x = x.view(b, s, e)
+#         print(f"{x.shape=}")
         l1, h1 = self.lstm1(x)
+#         print(f"{l1.shape=}, {h1[0].shape}")
         z0 = self.act1(l1)
+#         print(f"{z0.shape=}")
         out = self.linear(z0)
-        # out = self.model(x)
-        return out.squeeze(1)
+#         print(f"{out.shape=}")
+#         out = self.model(x)
+#         bs, x, classes = out.shape
+        return out
 
 
 class MyLSTM2(nn.Module):
-    def __init__(self, input_size: int = 1024, num_classes:int=2, dropout: float = 0.2, num_layers: int = 1) -> None:
+    def __init__(self, input_size: int = 1024, num_classes:int=2, dropout: float = 0.2, num_layers: int = 2) -> None:
         super().__init__()
         self.lstm1 = nn.LSTM(input_size, 512, dropout=dropout, num_layers=num_layers)
         self.lstm2 = nn.LSTM(512, 128, dropout=dropout, num_layers=num_layers)
@@ -73,33 +68,33 @@ class MyLSTM2(nn.Module):
         self.act1 = nn.ReLU()
 
     def forward(self, x: torch.Tensor):
-        s, b, e = x.shape
+        # s, b, e = x.shape
         # x = x.view(b, s, e)
         l1, h1 = self.lstm1(x)
         z0 = self.act1(l1)
         l2, h2 = self.lstm2(z0)
         z0 = self.act1(l2)
         out = self.linear(z0)
-        return out.squeeze(0)
+        return out #.transpose(1,0)
 
 
 class MyLSTMBidir(nn.Module):
-    def __init__(self, input_size: int = 1024, num_classes:int=2, dropout: float = 0.2, num_layers: int = 1) -> None:
+    def __init__(self, input_size: int = 1024, num_classes:int=2, dropout: float = 0.2, num_layers: int = 2) -> None:
         super().__init__()
         self.lstm1 = nn.LSTM(input_size, 512, bidirectional=True, dropout=dropout, num_layers=num_layers)
-        self.lstm2 = nn.LSTM(512*2, 128, dropout=dropout, num_layers=num_layers)
-        self.linear = nn.Linear(128, num_classes)
+        # self.lstm2 = nn.LSTM(512*2, 128, dropout=dropout, num_layers=num_layers)
+        self.linear = nn.Linear(512*2, num_classes)
         self.act1 = nn.ReLU()
 
     def forward(self, x: torch.Tensor):
-        s, b, e = x.shape
+        # s, b, e = x.shape
         # x = x.view(b, s, e)
         l1, h1 = self.lstm1(x)
         z0 = self.act1(l1)
-        l2, h2 = self.lstm2(z0)
-        z0 = self.act1(l2)
+        # l2, h2 = self.lstm2(z0)
+        # z0 = self.act1(l2)
         out = self.linear(z0)
-        return out.squeeze(0)
+        return out #.transpose(1, 0)
 
 
 class MySimpleAttn(nn.Module):
@@ -115,9 +110,9 @@ class MySimpleAttn(nn.Module):
     def forward(self, x: torch.Tensor):
         s, b, e = x.shape
         # x = x.view(b, s, e)
-        q = self.act(self.query(x))
-        k = self.act(self.key(x))
-        v = self.act(self.value(x))
+        q = self.query(x)
+        k = self.key(x)
+        v = self.value(x)
         z0, _ = self.attention(q, k, v)
         z0 = self.act(z0)
         out = self.classification(z0)

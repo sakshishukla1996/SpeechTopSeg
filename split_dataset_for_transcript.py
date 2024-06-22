@@ -1,0 +1,8 @@
+# de_test_files=["-YdzWocldcA", "5sP7JNqLuoU", "D_C6erYgo6g", "Nw3pLg0SchA", "a4euwtZwrfU", "iA0yo-FROo4", "ms0kSS92dUs", "-bKgQoU3I_Q", "63yvuzoN-7o", "EC2rFXYw3qU", "TGy7sfCs1wI", "as7MWY6FTjU", "iOukAet3st0", "pcw_xY8HHTg", "0OCGZlzwv9Y", "7DFdiZMd2CE", "GIbFM03QjIo", "Wn0YKLb7X1E", "dDmEM9KPhD4", "ipJAjzv5Rwo", "tfaqJu8vMac", "19me2KHDHvc", "8lejhKnKN9Y", "GoXWmZuir4A", "_dFKPmrVL98", "dPixZ0qkrbw", "jdyh2jI-EV4", "tw6tWg6Xfmk", "1cJlmZNv39k", "B_OpFrIee_s", "KqGJocHz_Ns", "_lmHh6vtWWM", "dbWkxSYRTaA", "jiq1cvUR3qo", "uRDPbn4Ulnc", "2TFE8ZTen8c", "CGoI2M5qO6M", "MJutn06aq4M", "_n1gFvjEPXk", "fyrWGeSgIR0", "lsR6BjOHpwg", "xbcBickqO0Y", "3iJra9tcWpo", "CVE36rXKxAI", "MPqbfWasSYE", "_oLcR-Vpth0", "hXt1MJ15fKM", "mDmYq9L4heA", "xno25Ek9Y44", "4oo8E5mjF2w", "DTka8DW6YJ4", "N7ekjRkvHAU", "_wiXwIXOoFg", "hua1vya9O9Q", "mQZQ10_g_74"]
+# de_val_files=[ "-H8HbSAXrO0", "8IAeXnWA9ug", "FGsTwqXyuNY", "Qhlv-HFMxlc", "Y5bZVcyemUE", "fvFs5n0x41s", "rHBmx9aznJ4", "-zuTybxLzBk", "8aOF-1y_kr8", "Hu_wQMeUnuc", "Qsg3TfQ0uGo", "Yu0gDXetK6M", "hhkNnlaQVBw", "t-Km3NARbM8", "4T6d5tG5Zfo", "AwAahIHHVpk", "IEATBfJ3HRs", "T_zobENtuck", "_SgMfEv4qZw", "iBzCuarpReU", "tBuC9LPXuTo", "5jZ1NY5oY-A", "B2M6_iG4Fvc", "KaAT-9IiKXA", "UuR91P1hmPw", "_URUw-y9gKY", "jA6dS4dlqBY", "tKfUv0FkJRY", "71SlTKIBhZY", "BB4y9Dp0Xpw", "MUX4VS2QKS4", "WkftKvgBOS8", "baedwFm36SY", "jAJT4s02sK4", "vwy-00ay32Y", "7B9GlagfeUY", "DK4FqftZ0E4", "Mk6vbG4-52Y", "X1fb7msDnso", "bhSBZdZLVDU", "moBy4_cQ7sM", "x6RdjRhqWs8", "7kEk07G7zNQ", "EAMlMGligXU", "MteNKW_Vnog", "XMos963euK0", "eThWX3TWWts", "nCjf7duGINI", "86eDGkk2ivg", "EaJtDgmU5fk", "QHQZPyXassY", "XVEULf7Tqms", "fQAJduq8-r4", "ng9Nmb9H6iI" ]
+
+
+import os
+from pathlib import Path
+
+files = Path()
