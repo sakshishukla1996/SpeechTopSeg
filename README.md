@@ -26,7 +26,7 @@ The following table provides detailed information on the dataset.
 **Akashvani**        |                          |           |           |                 |           |           |                    |           |           |
 | Hindi                | -                        | -         | 14.96     | -               | -         | 51        | -                  | -         | 11.98     |
 
-The dataset can be found [here]("./additional_experiments/data/") and the following description can be used to get the audio, the respective transcripts and also the information on the chapters.
+The dataset can be found [here]("./additional_experiments/data") and the following description can be used to get the audio, the respective transcripts and also the information on the chapters.
 
 **Audio**
 
