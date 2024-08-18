@@ -25,7 +25,8 @@ class LitModule(LightningModule):
         self.net = net
 
         # loss function
-        self.criterion = torch.nn.CrossEntropyLoss(weight=torch.tensor([0.1, 0.9]))
+        # self.criterion = torch.nn.CrossEntropyLoss(weight=torch.tensor([0.1, 0.9]))
+        self.criterion = torch.nn.BCEWithLogitsLoss()
 
         # metric objects for calculating and averaging accuracy across batches
         self.train_acc = Accuracy(task="multiclass", num_classes=2)
@@ -66,22 +67,14 @@ class LitModule(LightningModule):
         """
         x, y = batch   # (1,sent,embb), (sent)
         b,s,e = x.shape
-        # x = x.view(-1,1,e)
-        # breakpoint()
         logits = self.forward(x)
+        # loss = self.criterion(logits.squeeze(0), y.squeeze(0).to(torch.long))
         # breakpoint()
-        # logits=logits.squeeze(0)
+        # loss = self.criterion(torch.nn.Sigmoid()(logits).argmax(-1).float(), y.float())
         # breakpoint()
-        # y=y.squeeze(0)
-        loss = self.criterion(logits.squeeze(0), y.squeeze(0))
-        # loss = torch.tensor([self.criterion(input=logits[i], target=y[i]) for i in range(logits.shape[0])], requires_grad=True).sum()
-        preds = logits.softmax(-1).argmax(-1).squeeze(0)
-        # breakpoint()
-        # preds = torch.argmax(logits, dim=1)
-        # if self.current_epoch>0:
-        # preds = logits.softmax(-1).argmax(-1)
-        # breakpoint()
-        preds[-1]=1
+        loss = self.criterion(logits.float(), torch.nn.functional.one_hot(y.long()).float())
+        preds = logits.sigmoid().argmax(-1).squeeze(0)
+        preds[-1] = 1
         return loss, preds, y.squeeze(0)
 
     def training_step(
@@ -100,14 +93,14 @@ class LitModule(LightningModule):
         self.train_loss(loss)
         self.train_acc(preds, targets)
         f1_score = multiclass_f1_score(preds.view(-1), targets.view(-1), num_classes=2, average="micro")
-        if f1_score>0.75:
+        if False or f1_score>0.75:
             pred_boundaries = get_seg_boundaries(classifications=preds)
             target_boundaries = get_seg_boundaries(classifications=targets)
-            train_pk, train_count_pk = pk(pred_boundaries, target_boundaries)
-            train_windiff, train_count_windiff = win_diff(pred_boundaries, target_boundaries)
+            train_pk, _ = pk(pred_boundaries, target_boundaries)
+            train_windiff, _ = win_diff(pred_boundaries, target_boundaries)
             self.log("train/pk", train_pk, on_step=True, on_epoch=False, prog_bar=True)
             self.log("train/windiff", train_windiff, on_step=True, on_epoch=False, prog_bar=True)
-        
+
 
         self.log("train/f1", f1_score, on_step=True, on_epoch=True, prog_bar=True)
         self.log("train/loss", self.train_loss, on_step=True, on_epoch=True, prog_bar=True)
@@ -143,17 +136,51 @@ class LitModule(LightningModule):
             val_windiff=1.0
         self.prev_batch = {"batch": batch, "preds": pred_boundaries, "targets": target_boundaries}
         if val_pk<0.2:
-            print(f"Predictions: \n\t{self.prev_batch['targets']} \n\t{self.prev_batch['preds']}")
+            print(f"Predictions: \n\tTarg = {self.prev_batch['targets']} \n\tPred = {self.prev_batch['preds']}")
             print("="*80)
         # update and log metrics
         self.val_loss(loss)
         self.val_acc(preds, targets)
         f1_score =  multiclass_f1_score(preds.view(-1), targets.view(-1), num_classes=2, average="micro")
         self.log("val/pk", val_pk, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/windiff", val_windiff, on_step=True, on_epoch=False, prog_bar=True)
-        self.log("val/f1", f1_score, on_step=True, on_epoch=True, prog_bar=True)
+        self.log("val/windiff", val_windiff, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/f1", f1_score, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
+
+
+    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
+        """Perform a single Testing step on a batch of data from the testing set.
+
+        :param batch: A batch of data (a tuple) containing the input tensor of images and target
+            labels.
+        :param batch_idx: The index of the current batch.
+        """
+        loss, preds, targets = self.model_step(batch)
+        # breakpoint()
+        pred_boundaries = get_seg_boundaries(classifications=preds.squeeze(0))
+        target_boundaries = get_seg_boundaries(classifications=targets.squeeze(0))
+        try:
+            val_pk, val_count_pk = pk(pred_boundaries, target_boundaries)
+        except:
+            val_pk = 1.0
+        try:
+            val_windiff, val_count_windiff = win_diff(pred_boundaries, target_boundaries)
+        except:
+            val_windiff=1.0
+        self.prev_batch = {"batch": batch, "preds": pred_boundaries, "targets": target_boundaries}
+        if val_pk<0.2:
+            print(f"Predictions: \n\tTarg = {self.prev_batch['targets']} \n\tPred = {self.prev_batch['preds']}")
+            print("="*80)
+        # update and log metrics
+        self.val_loss(loss)
+        self.val_acc(preds, targets)
+        f1_score =  multiclass_f1_score(preds.view(-1), targets.view(-1), num_classes=2, average="micro")
+        self.log("test/pk", val_pk, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test/windiff", val_windiff, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test/f1", f1_score, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test/acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
 
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
@@ -163,25 +190,6 @@ class LitModule(LightningModule):
         # otherwise metric would be reset by lightning after each epoch
         
         self.log("val/acc_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True)
-
-    # def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
-        # """Perform a single test step on a batch of data from the test set.
-
-        # :param batch: A batch of data (a tuple) containing the input tensor of images and target
-        #     labels.
-        # :param batch_idx: The index of the current batch.
-        # """
-        # loss, preds, targets = self.model_step(batch)
-
-        # # update and log metrics
-        # self.test_loss(loss)
-        # self.test_acc(preds, targets)
-        # self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
-        # self.log("test/acc", self.test_acc, on_step=False, on_epoch=True, prog_bar=True)
-
-    # def on_test_epoch_end(self) -> None:
-    #     """Lightning hook that is called when a test epoch ends."""
-    #     pass
 
     def setup(self, stage: str) -> None:
         """Latest method torch.compile to speedup on a100 machines. This gives about 1.9x to 2.1x boost. 

@@ -1,0 +1,25 @@
+_target_: src.data.datamodule.EuroNewsConcatDataLoader
+train_list: 
+  - /data/euronews_dataset/audio_dataset_cl/training_data/de/*.pt  # Glob path
+  - /data/euronews_dataset/audio_dataset/training_data/en/*.pt  # Glob path
+  # - /data/euronews_dataset/audio_dataset_cl/training_data/ru/*.pt  # Glob path
+  - /data/euronews_dataset/audio_dataset_cl/training_data/es/*.pt  # Glob path
+  - /data/euronews_dataset/audio_dataset_cl/training_data/pt/*.pt  # Glob path
+  - /data/euronews_dataset/audio_dataset_cl/training_data/fr/*.pt  # Glob path
+  - /data/euronews_dataset/audio_dataset_cl/training_data/it/*.pt  # Glob path
+val_list:
+  - /data/euronews_dataset/audio_dataset_cl/val_data/de/*.pt
+  - /data/euronews_dataset/audio_dataset/val_data/en/*.pt  # Glob path
+  # - /data/euronews_dataset/audio_dataset_cl/val_data/ru/*.pt  # Glob path
+  - /data/euronews_dataset/audio_dataset_cl/val_data/es/*.pt  # Glob pat
+  - /data/euronews_dataset/audio_dataset_cl/val_data/pt/*.pt  # Glob path
+  - /data/euronews_dataset/audio_dataset_cl/val_data/fr/*.pt  # Glob path
+  - /data/euronews_dataset/audio_dataset_cl/val_data/it/*.pt  # Glob path
+test_list:
+  # - /data/euronews_dataset/audio_dataset/test_data/de/*.pt
+  # - /data/euronews_dataset/audio_dataset/test_data/en/*.pt  # Glob path
+  # - /data/euronews_dataset/audio_dataset/test_data/ru/*.pt  # Glob path
+  # - /data/euronews_dataset/audio_dataset/test_data/es/*.pt  # Glob path
+  - /data/euronews_dataset/audio_dataset/test_data/pt/*.pt  # Glob path
+  # - /data/euronews_dataset/audio_dataset/test_data/fr/*.pt  # Glob path
+  # - /data/euronews_dataset/audio_dataset/test_data/it/*.pt  # Glob path

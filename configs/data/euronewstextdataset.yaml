@@ -1,0 +1,22 @@
+_target_: src.data.datamodule.EuroNewsTextDataLoader
+train_list:
+  # - /data/euronews_dataset/transcript_embedding_dataset/training_data/en/*.pt  # Glob path
+  # - /data/euronews_dataset/transcript_embedding_dataset/training_data/de/*.pt  # Glob path
+  # - /data/euronews_dataset/transcript_embedding_dataset/training_data/fr/*.pt  # Glob path
+  # - /data/euronews_dataset/transcript_embedding_dataset/training_data/it/*.pt  # Glob path
+  # - /data/euronews_dataset/transcript_embedding_dataset/training_data/es/*.pt  # Glob path
+  - /data/euronews_dataset/transcript_embedding_dataset/training_data/pt/*.pt  # Glob path
+val_list:
+  # - /data/euronews_dataset/transcript_embedding_dataset/val_data/en/*.pt  # Glob path
+  # - /data/euronews_dataset/transcript_embedding_dataset/val_data/de/*.pt  # Glob path
+  # - /data/euronews_dataset/transcript_embedding_dataset/val_data/fr/*.pt  # Glob path
+  # - /data/euronews_dataset/transcript_embedding_dataset/val_data/it/*.pt  # Glob path
+  # - /data/euronews_dataset/transcript_embedding_dataset/val_data/es/*.pt  # Glob path
+  - /data/euronews_dataset/transcript_embedding_dataset/val_data/pt/*.pt  # Glob path
+test_list:
+  # - /data/euronews_dataset/transcript_embedding_dataset/val_data/en/*.pt  # Glob path
+  # - /data/euronews_dataset/transcript_embedding_dataset/val_data/de/*.pt  # Glob path
+  # - /data/euronews_dataset/transcript_embedding_dataset/val_data/fr/*.pt  # Glob path
+  # - /data/euronews_dataset/transcript_embedding_dataset/val_data/it/*.pt  # Glob path
+  # - /data/euronews_dataset/transcript_embedding_dataset/val_data/es/*.pt  # Glob path
+  - /data/euronews_dataset/transcript_embedding_dataset/val_data/pt/*.pt  # Glob path

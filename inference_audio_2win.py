@@ -40,7 +40,7 @@ input_root = Path("/disk1/projects/sonar_multilingual_segmentation/data")
 # url = "https://www.youtube.com/watch?v=X3Po8GPHqDM"
 
 # checkpoint = "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/sonar_audio_linear_random-v5.ckpt"
-checkpoint = "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/sonar_audio_linear_random-v2.ckpt"  # Best checkpoint
+checkpoint = "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/sonar_audio_window_prev_curr_linear.ckpt"  # Best checkpoint
 output_root = Path("/disk1/projects/sonar_multilingual_segmentation/predictions")
 language = "de"
 device = torch.device("cuda")
@@ -60,19 +60,19 @@ def main(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         # breakpoint()
         input_root.mkdir(parents=True, exist_ok=True)
         stream = yt.streams[0]
-        download_path = stream.download(output_path = input_root)
+        download_path = stream.download(output_path =input_root)
         os.system(f"ffmpeg -i \"{download_path}\" -vn {input_root / 'audio.wav'}")
-
+        
 
     files = list(Path(input_root).glob("*.wav"))
-
+    
     model_ckpt = torch.load(checkpoint)
     net = model_ckpt['hyper_parameters']["net"]
     module = hydra.utils.instantiate(cfg.model, net=net)
     module.load_state_dict(model_ckpt['state_dict'], strict=False)
     module.to(device)
     module.eval()
-
+    
     for file in files:
         audio, sr = torchaudio.load(file)
         audio = audio[:1, :]  # Rechannel
@@ -85,7 +85,10 @@ def main(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         with torch.no_grad():
             embeddings = s2vec_model.predict(audio_10_splits, batch_size=16)
             output_10 = torch.nan_to_num(embeddings, nan=0.0)
-            logits = module(output_10.unsqueeze(0))
+            # Prev_curr
+            prepad = torch.cat([torch.zeros(1, output_10.shape[-1], device=output_10.device), output_10])
+            inp = torch.cat([prepad[:-1], output_10], dim=-1)  # 100
+            logits = module(inp.unsqueeze(0))
         preds = logits.softmax(-1).argmax(-1).squeeze(0)
 
         out = []
@@ -96,7 +99,7 @@ def main(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
             else:
                 out.append(spl)
         print(preds)
-        torchaudio.save(output_root / file.name, torch.cat(out, dim=1), sample_rate=sr, bits_per_sample=16)
+        torchaudio.save(output_root / file.name.replace(".", "_prev_curr."), torch.cat(out, dim=1), sample_rate=sr, bits_per_sample=16)
         print("Saved!")
     
 if __name__=="__main__":

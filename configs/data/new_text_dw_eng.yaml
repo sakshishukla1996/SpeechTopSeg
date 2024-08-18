@@ -1,10 +1,9 @@
 # /disk1/projects/sonar_multilingual_segmentation/src/data/components/textdataset.py
 _target_: src.data.datamodule.NewCustomDataModuleText
-train_filelist:
+train_filelist: 
   en:
-    - /data/text/preprocessed/sonar/wiki_727_single/train/*.pt
     - /data/text/preprocessed/sonar/dw-2019/en/*.pt
-val_filelist:
+val_filelist: 
   en:
     - /data/text/preprocessed/sonar/wiki_727_whole/dev/*.pt
 

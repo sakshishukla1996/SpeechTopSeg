@@ -16,6 +16,7 @@ rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
 from src.data.datamodule import CustomDataModule
 from lightning.pytorch.loggers import WandbLogger
+from lightning.pytorch.callbacks import LearningRateMonitor
 
 from src.utils import (
     RankedLogger,
@@ -51,8 +52,8 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     val_filelist = sorted(list(Path(cfg.root_val_path).glob("**/*.pt")))
     log.info(f"Train filelist: {len(train_filelist)}; Val filelist: {len(val_filelist)}")
 
+    # Initializing the pytorch-lightning data module
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
-
 
     
     log.info(f"Instantiating model <{cfg.model._target_}>")
@@ -63,19 +64,30 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 
     log.info("Instantiating loggers...")
     # logger: List[Logger] = instantiate_loggers(cfg.get("logger"))
-    logger = WandbLogger(name=cfg.name, project=os.environ['WANDB_PROJECT'], prefix="Sonar")
+    logger = WandbLogger(
+        name=cfg.name,
+        project=os.environ['WANDB_PROJECT'],
+        group=cfg.logger.wandb.group,
+        job_type="train",
+        tags=cfg.logger.wandb.tags
+    )
 
+    model_save_path = os.path.join(cfg.checkpoint_path, "transcript", cfg.logger.wandb.group, cfg.name)
+    Path(model_save_path).mkdir(exist_ok=True, parents=True)
+    
     modelsave = ModelCheckpoint(
-        dirpath="/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar",
+        dirpath=model_save_path,
         filename=cfg.name,
         monitor="val/pk",
         save_last=True,
         verbose=True,
         mode="min"
         )
+    
+    lr_monitor = LearningRateMonitor(logging_interval='step')
 
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
-    trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=[modelsave], logger=[logger])
+    trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=[modelsave, lr_monitor], logger=[logger])
 
     object_dict = {
         "cfg": cfg,
@@ -92,18 +104,18 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 
     if cfg.get("train"):
         log.info("Starting training!")
-        trainer.fit(model=model, datamodule=datamodule, ckpt_path=cfg.get("ckpt_path"))
+        trainer.fit(
+            model=model, 
+            datamodule=datamodule, 
+            # ckpt_path=cfg.get("ckpt_path")
+            )
 
     train_metrics = trainer.callback_metrics
 
-    if cfg.get("test"):
+    if hasattr(datamodule, "test_dataloader"):
         log.info("Starting testing!")
-        ckpt_path = trainer.checkpoint_callback.best_model_path
-        if ckpt_path == "":
-            log.warning("Best ckpt not found! Using current weights for testing...")
-            ckpt_path = None
-        trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
-        log.info(f"Best ckpt path: {ckpt_path}")
+        # ckpt_path = trainer.checkpoint_callback.best_model_path
+        trainer.test(datamodule=datamodule, ckpt_path='best')
 
     test_metrics = trainer.callback_metrics
 

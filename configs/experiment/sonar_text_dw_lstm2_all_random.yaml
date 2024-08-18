@@ -1,7 +1,7 @@
 # @package _global_
 
 defaults:
-  - override /data: harcoded_loader
+  - override /data: new_text_dw_eng
   - override /model: lstmbidir
   - override /callbacks: richprogress
   - override /trainer: gpu
@@ -10,8 +10,8 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 tags: ["experiement", "simple_dense_net"]
-root_train_path: "/data/preproc_sonar_single/fr/"
-root_val_path: "/data/preproc_sonar/validation_dataset/"
+root_train_path: "/data/text/preprocessed/sonar/dw-2018/en/"
+root_val_path: "/data/text/preprocessed/sonar/wiki_727_single/dev/"
 
 trainer:
   accelerator: auto
@@ -25,7 +25,7 @@ trainer:
 
 model:
   optimizer:
-    lr: 0.002
+    lr: 0.01
   net:
     input_size: 1024
     num_classes: 2
@@ -39,8 +39,8 @@ logger:
   wandb:
     tags: ${tags}
     project: Sonar_text
-    group: sonar_text
+    group: sonar_text_dw
   aim:
-    experiment: sonar_all_lstmbidir_random
+    experiment: ${name}
 
-name: sonar_all_lstmbidir_random
+name: sonar_all_lstmbidir_random_dw

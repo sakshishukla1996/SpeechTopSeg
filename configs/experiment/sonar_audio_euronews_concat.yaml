@@ -1,7 +1,7 @@
 # @package _global_
 
 defaults:
-  - override /data: new_text_dw_eng
+  - override /data: euronewsconcatdataset
   - override /model: linear
   - override /callbacks: richprogress
   - override /trainer: gpu
@@ -9,39 +9,35 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-tags: ["experiement", "sonar", "linear", "en", "random"]
-root_train_path: "/data/text/preprocessed/sonar/dw-2018/en/"
-root_val_path: "/data/text/preprocessed/sonar/wiki_727_single/dev/"
+tags: ["euronews", "sonar", "en_encoder_pt", "audio", "cross_lingual"]
+root_train_path: None
+root_val_path: None
 
 trainer:
   accelerator: auto
   devices: 1
   strategy: ddp
   min_epochs: 5
-  max_epochs: 10
+  max_epochs: 30
   gradient_clip_val: 0.5
   val_check_interval: 1.0
   num_sanity_val_steps: 0
+  accumulate_grad_batches: 16
   # reload_dataloaders_every_n_epochs: 1
 
 model:
   optimizer:
-    lr: 0.01
+    lr: 0.002
   net:
-    input_size: 1024
+    input_size: 3072
     num_classes: 2
   compile: false
 
-data:
-  batch_size: 1
-  num_workers: 0
 
 logger:
   wandb:
     tags: ${tags}
-    project: Sonar_text
-    group: sonar_text_dw
-  aim:
-    experiment: ${name}
+    group: cross_lingual_en
 
-name: sonar_en_linear_random
+name: sonar_audio_linear_random # ModelName_numLayers
+checkpoint_path: /data/euronews_dataset/weights

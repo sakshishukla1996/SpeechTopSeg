@@ -50,11 +50,12 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     train_filelist = sorted(list(Path(cfg.root_train_path).glob("**/*.pt")))
     val_filelist = sorted(list(Path(cfg.root_val_path).glob("**/*.pt")))
     log.info(f"Train filelist: {len(train_filelist)}; Val filelist: {len(val_filelist)}")
+    if len(train_filelist)==0 or len(val_filelist)==0:
+        datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
+    else:
+        datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data, train_filelist=train_filelist, val_filelist=val_filelist)
 
-    datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data, train_filelist=train_filelist, val_filelist=val_filelist)
-
-
-    
+    #breakpoint()
     log.info(f"Instantiating model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model)
 
@@ -63,10 +64,19 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 
     log.info("Instantiating loggers...")
     # logger: List[Logger] = instantiate_loggers(cfg.get("logger"))
-    logger = WandbLogger(name=cfg.name, project=os.environ['WANDB_PROJECT'], prefix="Sonar")
+    logger = WandbLogger(
+        name=cfg.name,
+        project=os.environ['WANDB_PROJECT'],
+        group=cfg.logger.wandb.group,
+        job_type="train",
+        tags=cfg.logger.wandb.tags
+    )
 
+    model_save_path = os.path.join(cfg.checkpoint_path, "audio", cfg.logger.wandb.group, cfg.name)
+    Path(model_save_path).mkdir(exist_ok=True, parents=True)
+    
     modelsave = ModelCheckpoint(
-        dirpath="/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar",
+        dirpath=model_save_path,
         filename=cfg.name,
         monitor="val/pk",
         save_last=True,
@@ -96,14 +106,10 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 
     train_metrics = trainer.callback_metrics
 
-    if cfg.get("test"):
+    if hasattr(datamodule, "test_dataloader"):
         log.info("Starting testing!")
-        ckpt_path = trainer.checkpoint_callback.best_model_path
-        if ckpt_path == "":
-            log.warning("Best ckpt not found! Using current weights for testing...")
-            ckpt_path = None
-        trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
-        log.info(f"Best ckpt path: {ckpt_path}")
+        # ckpt_path = trainer.checkpoint_callback.best_model_path
+        trainer.test(datamodule=datamodule, ckpt_path='best')
 
     test_metrics = trainer.callback_metrics
 

@@ -8,3 +8,4 @@ strategy: ddp
 num_sanity_val_steps: 200
 enable_checkpointing: true
 val_check_interval: 0.25
+accumulate_grad_batches: 4

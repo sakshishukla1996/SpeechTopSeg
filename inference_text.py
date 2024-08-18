@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import torch
 from torch import nn
+from pprint import pprint
 
 import pandas as pd
 
@@ -36,10 +37,26 @@ log = RankedLogger(__name__, rank_zero_only=True)
 
 
 input_root = "/disk1/projects/sonar_multilingual_segmentation/data"
-checkpoint = "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/sonar_en_bilstm_random.ckpt"
+# checkpoint = "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/sonar_en_bilstm_random.ckpt"
+checkpoints = [
+#     "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/sonar_en_linear_wiki727.ckpt",
+#     "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/sonar_en_attention_random_dw-v3.ckpt",
+#     "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/sonar_en_lstmbidir_wiki727.ckpt",
+#     "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/sonar_en_linear_random-v2.ckpt",
+#     "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/sonar_dw_multihead16.ckpt",
+#     "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/last-v20.ckpt", # A good checkpoint
+#     "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/last-v22.ckpt",
+#     "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/last-v24.ckpt",
+#     "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/last-v26.ckpt",
+    # "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/last-v23.ckpt",
+    # "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/last-v22.ckpt",
+    # "/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/last-v32.ckpt"
+    ]
+checkpoints = [f"/disk1/projects/sonar_multilingual_segmentation/checkpoints/sonar/last-v{i}.ckpt" for i in range(10,34)]
 output_root = Path("/disk1/projects/sonar_multilingual_segmentation/predictions")
 language = "en"
 device = "cuda"
+thresh = 0.3
 
 languages = {"en": "english", "de":"german", "es":"spanish", "fr": "french", "pt":"portuguese"}
 sonar_lang = {"en": "eng_Latn", "de":"deu_Latn", "es":"spa_Latn", "fr": "fra_Latn", "pt":"por_Latn"} # https://github.com/facebookresearch/flores/blob/main/flores200/README.md#languages-in-flores-200
@@ -62,12 +79,6 @@ def main(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         jsonl=True
     else:
         files = list(Path(input_root).glob("*.txt"))
-
-    model_ckpt = torch.load(checkpoint)
-    net = model_ckpt['hyper_parameters']["net"]
-    module = hydra.utils.instantiate(cfg.model, net=net)
-    module.load_state_dict(model_ckpt['state_dict'])
-    module.to(device)
     
     for file in files:
         if jsonl:
@@ -91,8 +102,30 @@ def main(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         text = [i[:512] for i in text]
         with torch.no_grad():
             embeddings = embedder.predict(text, source_lang=sonar_lang[language], batch_size=64)
-            out = module(embeddings.unsqueeze(0))
-        out = nn.functional.softmax(out, -1).squeeze(1).argmax(-1).detach().cpu()
+        
+
+        outs = []
+        for checkpoint in checkpoints:
+            model_ckpt = torch.load(checkpoint)
+            net = model_ckpt['hyper_parameters']["net"]
+            module = hydra.utils.instantiate(cfg.model, net=net)
+            module.load_state_dict(model_ckpt['state_dict'], strict=False)
+            module.to(device)
+            module.eval()
+            with torch.no_grad():
+                logits = module(embeddings.unsqueeze(0))
+            # out = nn.functional.softmax(logits, -1).squeeze(1).argmax(-1).detach().cpu()
+            out = logits.softmax(-1).argmax(-1).squeeze(0).detach().cpu()
+            outs.append(out)
+        print(file)
+        pprint(outs)
+        print("-"*80)
+        pred = torch.stack(outs).to(torch.float).mean(0)
+        pred[pred >= thresh] = 1
+        pred[pred < thresh] = 0
+        # pred = pred.to("torch.int")
+        print(file.stem, out)
+        # breakpoint()
         if jsonl:
             result = ["<p>", f'<mark style="background: {get_random_background()}!important">']
             for l, o, se in zip(labels, out, text):
@@ -105,13 +138,15 @@ def main(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
             with open(output_root / f"{file.stem}.html", "w") as f:
                 f.write(" ".join(result))
         else:
-            result = ["<p>"]
+            result = ["<p>", f'<mark style="background: {get_random_background()}!important">']
             for o, se in zip(out, text):
                 if o==1:
-                    result.append("</p> <p>")
+                    result.append("</mark> </p>")
+                    result.append("<p>")
+                    result.append(f'<mark style="background: {get_random_background()}!important">')
                 result.append(se)
             result.append("</p>")
-            with open(output_root / f"{file.stem}.html", "w") as f:
+            with open(output_root / f"{file.stem}.md", "w") as f:
                 f.write(" ".join(result))
 
 

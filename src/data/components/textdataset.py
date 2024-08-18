@@ -33,7 +33,6 @@ class TextDataset(Dataset):
     def __len__(self):
         return self.len_files if self.max_files is None else self.max_files
 
-
     def __getitem__(self, index):
 
         if self.stage == "random":
@@ -50,7 +49,7 @@ class TextDataset(Dataset):
             # print(f"================ {file} ================")
             emb, labs = self._get_seq_data(file)
 
-        return emb, labs 
+        return emb, labs
     
     def _get_seq_data(self, filepath):
         file = filepath
@@ -76,10 +75,66 @@ class TextDataset(Dataset):
             labs.extend(lab)
         embs = torch.cat(embs)
         labs = torch.tensor(labs)
-        if self.counts==5000:
+        if self.counts==20000:
             self.counts=0
             self.nfiles+=1
             print(f"Increased the number if files to {self.nfiles}")
         else:
             self.counts+=1
         return embs, labs
+
+class EuroNewsTextDataset(Dataset):
+    def __init__(self, embeddings_path: list) -> None:
+        super().__init__()
+        if isinstance(embeddings_path, list):
+            embeddings_path = [embeddings_path]
+        self.files = []
+        for epth in embeddings_path:
+            self.files.extend(glob(epth))
+        print(f"Found {len(self.files)=}")
+
+    def __len__(self):
+        return len(self.files)
+
+    def __getitem__(self, idx):
+        e = torch.load(self.files[idx])
+        emb = e['embedding']
+        emb = torch.concat(emb, dim=0)
+        labs = torch.tensor(e['label'])
+        # print("===================================", emb.shape, labs.shape)
+        return emb, labs
+    
+class EuroNewsConcatTextDataset(Dataset):
+    def __init__(self, embeddings_path: list) -> None:
+        super().__init__()
+        if isinstance(embeddings_path, list):
+            embeddings_path = [embeddings_path]
+        self.files = []
+        for epth in embeddings_path:
+            self.files.extend(glob(epth))
+        print(f"Found {len(self.files)=}")
+
+    def __len__(self):
+        return len(self.files)
+
+    def __getitem__(self, idx):
+        e = torch.load(self.files[idx])
+        emb = e['embedding']
+        emb = torch.concat(emb, dim=0)
+        labs = torch.tensor(e['label'])
+        labels = label = torch.zeros(emb.shape[0]).type(torch.LongTensor)
+        # Create 3d input
+        prepad = torch.cat([torch.zeros(2, emb.shape[-1]), emb])
+        sidepad = torch.cat([torch.zeros(1, emb.shape[-1]), emb, torch.zeros(1, emb.shape[-1])])
+        postpad = torch.cat([emb, torch.zeros(2, emb.shape[-1])])
+        dense_inp = torch.cat([prepad, sidepad, postpad], dim=-1)  # Remove last as there's no information
+    
+        # Create 3d labels
+        prepad = torch.cat([torch.zeros(2), labs])
+        sidepad = torch.cat([torch.zeros(1), labs, torch.zeros(1)])
+        postpad = torch.cat([labs, torch.zeros(2)])
+        dense_lab = torch.stack([sidepad, postpad])
+
+        final_lab = torch.logical_or(dense_lab[0],dense_lab[1]).to(int)  # Remove last as there's no information 
+        # final_lab = torch.cat([label, torch.tensor([0])])
+        return dense_inp[:-2], final_lab[:-2]

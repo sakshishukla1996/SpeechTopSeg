@@ -1,0 +1,10 @@
+_target_: src.data.datamodule.EuroNewsTextConcatDataLoader
+train_list: 
+  - /data/tagesschau/transcript_dataset/train_data/*.pt
+  - /data/euronews_dataset/transcript_embedding_dataset/training_data/de/*.pt
+val_list: 
+  - /data/tagesschau/transcript_dataset/val_data/*.pt
+  - /data/euronews_dataset/transcript_embedding_dataset/val_data/de/*.pt
+test_list: 
+  - /data/tagesschau/transcript_dataset/test_data/*.pt
+  - /data/euronews_dataset/transcript_embedding_dataset/test_data/de/*.pt

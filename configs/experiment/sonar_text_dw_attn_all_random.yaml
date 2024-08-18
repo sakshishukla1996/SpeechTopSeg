@@ -1,8 +1,8 @@
 # @package _global_
 
 defaults:
-  - override /data: new_text_eng
-  - override /model: linear
+  - override /data: new_text_dw_eng
+  - override /model: attention
   - override /callbacks: richprogress
   - override /trainer: gpu
 
@@ -10,15 +10,15 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 tags: ["experiement", "sonar", "attention", "en", "random"]
-root_train_path: "/data/preproc_sonar_single/fr/"
-root_val_path: "/data/preproc_sonar/validation_dataset/"
+root_train_path: "/data/text/preprocessed/sonar/dw-2018/en/"
+root_val_path: "/data/text/preprocessed/sonar/wiki_727_single/dev/"
 
 trainer:
   accelerator: auto
   devices: 1
   strategy: ddp
   min_epochs: 5
-  max_epochs: 10
+  max_epochs: 15
   gradient_clip_val: 0.5
   val_check_interval: 0.5
   num_sanity_val_steps: -1
@@ -26,7 +26,7 @@ trainer:
 
 model:
   optimizer:
-    lr: 0.001
+    lr: 0.01
   net:
     input_size: 1024
     num_classes: 2
@@ -42,6 +42,6 @@ logger:
     project: Sonar_text
     group: sonar_text_dw
   aim:
-    experiment: sonar_en_attention_random
+    experiment: ${name}
 
-name: sonar_en_attention_random
+name: sonar_en_attention_random_dw

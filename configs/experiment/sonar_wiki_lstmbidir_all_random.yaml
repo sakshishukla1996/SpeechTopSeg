@@ -1,8 +1,8 @@
 # @package _global_
 
 defaults:
-  - override /data: new_text_dw_eng
-  - override /model: linear
+  - override /data: new_text_eng
+  - override /model: lstm1
   - override /callbacks: richprogress
   - override /trainer: gpu
 
@@ -10,7 +10,8 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 tags: ["experiement", "sonar", "linear", "en", "random"]
-root_train_path: "/data/text/preprocessed/sonar/dw-2018/en/"
+
+root_train_path: "/data/text/preprocessed/sonar/wiki_727_single/train/"
 root_val_path: "/data/text/preprocessed/sonar/wiki_727_single/dev/"
 
 trainer:
@@ -20,13 +21,13 @@ trainer:
   min_epochs: 5
   max_epochs: 10
   gradient_clip_val: 0.5
-  val_check_interval: 1.0
-  num_sanity_val_steps: 0
+  val_check_interval: 0.5
+  num_sanity_val_steps: 10
   # reload_dataloaders_every_n_epochs: 1
 
 model:
   optimizer:
-    lr: 0.01
+    lr: 0.001
   net:
     input_size: 1024
     num_classes: 2
@@ -44,4 +45,4 @@ logger:
   aim:
     experiment: ${name}
 
-name: sonar_en_linear_random
+name: sonar_en_lstmbidir_wiki727
