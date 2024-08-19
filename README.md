@@ -86,7 +86,7 @@ python ./sonar_multilingual_segmentation/src/train_text.py experiment=sonar_text
 python texttiling.py ../data/euronews_en 
 ```
 ## Evaluation
-P<sub>k</sub> and Windiff are benchmark Evaluation Metrics for Topic Segmentation([metric explanation](https://pypi.org/project/segeval/)).
+P<sub>k</sub> and Windiff are benchmark Evaluation Metrics for Topic Segmentation ([metric explanation](https://pypi.org/project/segeval/)).
 
 To evaluate the P<sub>k</sub> and Windiff score use the following command in python.
 
@@ -97,7 +97,7 @@ from src.utils.evalutils import pk, win_diff
 
 Segmentation purity and coverage F-score
 
-Two similar scripts are provided to calculate the segmentation purity and coverage F-score
+Two similar scripts are provided to calculate the segmentation purity and coverage F-score and can be found [here](./additional_experiments/evaluation)
 ([metrics explanation](https://pyannote.github.io/pyannote-metrics/reference.html#segmentation)):
  - `segmentation_f_measure_e2e.py` -- intended for the output of an audio-based end-to-end system, which provides one label for each window of a fixed size (currently hardcoded to 10 seconds);
  - `segmentation_f_measure_pipeline.py` -- intended for the output of a text-based pipeline system, which provides one label for each sentence.
