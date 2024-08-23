@@ -116,7 +116,7 @@ Results of Other models, Texttiling,Pipeline and End-to-end are as follows:
 
 ## Inference
 
-You need to install [SONAR](https://github.com/facebookresearch/SONAR), `python version==3.10` using `pip install sonar-space`
+You need to install [SONAR](https://github.com/facebookresearch/SONAR), `python version==3.10` using `pip install sonar-space`, [checkpoints](https://zenodo.org/records/13338560).
 
 To perform inference for pipeline approach, use `inference_text.py`. 
 ```shell
