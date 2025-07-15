@@ -1,5 +1,6 @@
 # Advancing Topic Segmentation of Broadcasted Speech with Multilingual Semantic Embeddings
 
+[[Paper]](https://ebooks.iospress.nl/doi/10.3233/FAIA240961)
 The field of topic segemtation has yet to be explored well with spoken audio using multilingual semantic represenations.
 
 Since extracting semantic embeddings of speech is harder than extracting semantic representation with transcriptions. Therefore it is important to investigate role of semantic embeddings in speech can be efficient enough to implement an end-to-end speech segemntation pipeline.
