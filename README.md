@@ -64,10 +64,13 @@ Transcriptions are not provided for the `akashvani` subset
 and for the `euronews_en/json/WY66vzBSWxg.json` and `euronews_de/json/PzcL3Gjvxcg.json` files.
 
 ## Architecture
-**Pipeline:** The model follows a pipeline architecture where the speech is fed into an ASR and transcriptions are generated. These transcriptions are fed into the topic segmentation model. <img src="./img/Pipeline.png" alt="Pipeline Architecture" width="500"/>
+**Pipeline:** The model follows a pipeline architecture where the speech is fed into an ASR and transcriptions are generated. These transcriptions are fed into the topic segmentation model. 
+
+<img src="./img/Pipeline.png" alt="Pipeline Architecture" width="500"/>
+<img src="./img/End_to_end.png" alt="End-to-End Architecture" width="500"/>
 
 **End-to-End:** The end-to-end approach eliminates the dependency of an ASR and performs topic segmentation directly on speech.
-![End-to-end_Architecture](./img/End_to_end.png)
+
 
 ## Training
 For training, we use .yaml configurations in the command line.
