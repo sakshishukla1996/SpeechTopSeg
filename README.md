@@ -121,7 +121,7 @@ and `/path/to/hypothesis` is the path to the system output.
 
 ## Result
 Results of Other models, Texttiling,Pipeline and End-to-end are as follows:
-![Results](./img/Results.png) 
+<img src="./img/Results.png" alt="Results" width="500"/>
 
 ## Inference
 
