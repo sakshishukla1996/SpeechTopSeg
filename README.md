@@ -66,13 +66,10 @@ and for the `euronews_en/json/WY66vzBSWxg.json` and `euronews_de/json/PzcL3Gjvxc
 ## Architecture
 **Pipeline:** The model follows a pipeline architecture where the speech is fed into an ASR and transcriptions are generated. These transcriptions are fed into the topic segmentation model. 
 
-<img src="./img/Pipeline.png" alt="Pipeline Architecture" width="500"/>
-<img src="./img/End_to_end.png" alt="End-to-End Architecture" width="500"/>
-
 <table>
   <tr>
-    <td><img src="./img/Pipeline.png" alt="Pipeline Architecture" width="300"/></td>
-    <td><img src="./img/End_to_end.png" alt="End-to-End Architecture" width="300"/></td>
+    <td><img src="./img/Pipeline.png" alt="Pipeline Architecture" width="500"/></td>
+    <td><img src="./img/End_to_end.png" alt="End-to-End Architecture" width="500"/></td>
   </tr>
 </table>
 
