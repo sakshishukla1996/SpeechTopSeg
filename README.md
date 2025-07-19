@@ -131,13 +131,13 @@ To perform inference for pipeline approach, use `inference_text.py`.
 ```shell
 cd ./sonar_multilingual/
 conda activate <your sonar env>
-python inference_text.py
+python predict_text_concat.py
 ```
 To perform inference for end-to-end approach, use `inference_audio_3win.py`.
 
 ```shell
 cd ./sonar_multilingual/
 conda activate <your sonar env>
-python inference_audio_3win.py
+python predict_audio_concat.py
 ```
 
